@@ -1,16 +1,36 @@
-all:
-	@mkdir -p /home/$(USER)/data/wordpress
-	@mkdir -p /home/$(USER)/data/db
-	docker compose -f srcs/docker-compose.yml up --build
+
+COMPOSE_FILE	= srcs/docker-compose.yml
+DATA_DIR		= /home/$(USER)/data
+
+all: setup
+	docker compose -f $(COMPOSE_FILE) up --build -d
+
+setup:
+	@mkdir -p $(DATA_DIR)/db
+	@mkdir -p $(DATA_DIR)/wordpress
 
 down:
-	docker compose -f srcs/docker-compose.yml down
+	docker compose -f $(COMPOSE_FILE) down
 
-clean:
-	docker compose -f srcs/docker-compose.yml down -v
+stop:
+	docker compose -f $(COMPOSE_FILE) stop
+
+start:
+	docker compose -f $(COMPOSE_FILE) start
+
+status:
+	docker compose -f $(COMPOSE_FILE) ps
+
+logs:
+	docker compose -f $(COMPOSE_FILE) logs -f
+
+clean: down
 	docker system prune -af
 
-re:
-	clean all
+fclean: clean
+	sudo rm -rf $(DATA_DIR)
+	docker volume prune -f
 
-.PHONY: all down clean re
+re: fclean all
+
+.PHONY: all setup down stop start status logs clean fclean re
